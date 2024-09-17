@@ -1,46 +1,64 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"html/template"
 	inventory "inventory/Inventory"
+	"log"
+	"net/http"
 )
 
+var backpack = inventory.Inventory{}
+
 func main() {
+	http.HandleFunc("/", handleIndex)
+	http.HandleFunc("/backpack", handleBackpack)
+	http.HandleFunc("/search", handleSearch)
+
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	fmt.Println("Server is running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func init() {
 	slot1 := inventory.InventorySlot{
 		ItemName:   "coins",
 		StackLimit: 100,
-		StackSize:  5,
-		ImagePath:  "/images/coins",
+		StackSize:  50,
+		ImagePath:  "goldCoin.png",
 		ItemWeight: 0.1,
 		Category:   "money",
 	}
-	slot1.ItemInfo()
-	fmt.Println(slot1.GetTotalWeight())
-	slot1.SetStackSize(100)
-	fmt.Println(slot1.GetTotalWeight())
-	slot1.SetStackSize(50)
-	fmt.Println(slot1.GetTotalWeight())
-	slot1.SetStackSize(-100)
-	fmt.Println(slot1.GetTotalWeight())
-	slot1.SetStackSize(-10)
-	fmt.Println(slot1.GetTotalWeight())
 
-	backpack := inventory.Inventory{
+	backpack = inventory.Inventory{
 		WeightLimit: 100,
 		Name:        "Backpack",
 		ItemArray:   []inventory.InventorySlot{},
 	}
-
 	backpack.AddItem(slot1)
+	backpack.AddItem(inventory.InventorySlot{})
 	fmt.Println(backpack)
 
-	err := backpack.UpdateItemStackSize(100, 0)
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("index.html")
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	fmt.Println(backpack)
+	tmpl.Execute(w, nil)
+}
 
-	backpack.RemoveItem(0)
-	fmt.Println(backpack)
+func handleBackpack(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(backpack.ItemArray)
+}
 
+func handleSearch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Search functionality not implemented yet"})
 }
