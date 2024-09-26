@@ -14,7 +14,7 @@
         }
         .slot {
             width: 100px;
-            height: 120px;  /* Increased height to accommodate name */
+            height: 120px;
             border: 1px solid #ccc;
             display: flex;
             flex-direction: column;
@@ -24,17 +24,27 @@
             padding: 5px;
             box-sizing: border-box;
         }
-        .slot .name {
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 5px;
-            height: 20px;  /* Fixed height for name */
+        .searchModal {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .slot img {
             max-width: 100%;
-            max-height: 70px;  /* Limit image height */
+            max-height: 70px;
             margin-top: 5px;
+        }
+        .slot .name {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+            height: 20px;
         }
         .slot .number {
             position: absolute;
@@ -48,8 +58,13 @@
         }
         .slot.empty {
             justify-content: center;
-            font-style: italic;
-            color: #999;
+            align-items: center;
+            font-size: 48px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .slot.empty:hover {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
@@ -64,7 +79,7 @@
 
     <script>
         console.log("Script started");
-
+        
         function fetchBackpack() {
             console.log("Fetching backpack");
             fetch('/backpack')
@@ -84,23 +99,25 @@
             backpack.forEach((item, index) => {
                 const slotElement = document.createElement('div');
                 slotElement.className = 'slot';
-                console.log(item)
-                if (item.ImagePath) {
-                    console.log('Image success')
-                    const img = document.createElement('img');
-                    img.src = '/static/' + item.ImagePath;
-                    slotElement.appendChild(img);
 
-                    const number = document.createElement('div');
-                    number.textContent = item.StackSize;
-                    slotElement.appendChild(number);
-
+                if (item && item.ImagePath) {
                     const name = document.createElement('div');
                     name.className = 'name';
                     name.textContent = item.ItemName;
                     slotElement.appendChild(name);
+
+                    const img = document.createElement('img');
+                    img.src = '/static/' + item.ImagePath;
+                    img.alt = item.name;
+                    slotElement.appendChild(img);
+
+                    const number = document.createElement('div');
+                    number.className = 'number';
+                    number.textContent = item.StackSize;
+                    slotElement.appendChild(number);
                 } else {
-                    slotElement.textContent = 'Empty';
+                    slotElement.classList.add('empty');
+                    slotElement.innerHTML = '&#43;'; // Unicode for plus sign
                     slotElement.addEventListener('click', () => showSearchModal());
                 }
 
@@ -109,21 +126,41 @@
         }
 
         function showSearchModal() {
-            document.getElementById('searchModal').style.display = 'block';
+            document.getElementById('searchModal').style.display = 'flex';
         }
 
-        function performSearch() {
+        function hideSearchModal() {
+            document.getElementById('searchModal').style.display = 'none';
+        }
+
+        async function performSearch() {
             const searchTerm = document.getElementById('searchInput').value;
-            fetch(`/search?term=${encodeURIComponent(searchTerm)}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Search results:", data);
-                    // Handle search results here
-                    document.getElementById('searchModal').style.display = 'none';
-                })
-                .catch(error => console.error('Error performing search:', error));
-        }
+            
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: searchTerm }),
+                });
 
+                if (!response.ok) {
+                    throw new Error('Search request failed');
+                }
+
+                const result = await response.json();
+                console.log('Search result:', result);
+                
+                // Handle the search result here (e.g., update the UI)
+                
+            } catch (error) {
+                console.error('Error performing search:', error);
+                // Handle the error (e.g., show an error message to the user)
+            }
+
+            hideSearchModal();
+        }
         console.log("Calling fetchBackpack");
         fetchBackpack();
     </script>

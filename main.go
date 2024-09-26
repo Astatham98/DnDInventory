@@ -11,6 +11,14 @@ import (
 
 var backpack = inventory.Inventory{}
 
+type SearchRequest struct {
+	Query string `json:"query"`
+}
+
+type SearchResponse struct {
+	Results []string `json:"results"`
+}
+
 func main() {
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/backpack", handleBackpack)
@@ -60,5 +68,17 @@ func handleBackpack(w http.ResponseWriter, r *http.Request) {
 
 func handleSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req SearchRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	fmt.Println(req.Query)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Search functionality not implemented yet"})
 }
