@@ -20,6 +20,16 @@ type Inventory struct {
 	ItemArray   []InventorySlot // Array of items in the inventory
 }
 
+func (inv Inventory) getItemStackSize(item string) int {
+	switch item {
+	case "ARMOR":
+		return 2
+	case "WEAPON":
+		return 3
+	}
+	return 0
+}
+
 func (s InventorySlot) ItemInfo() {
 	fmt.Printf("The item in this slot is named %s and has a stack size of %d and a weight of %f\n", s.ItemName, s.StackSize, s.ItemWeight)
 }
