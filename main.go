@@ -92,7 +92,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	itemSlot := generateItemSlot(data_row)
 	backpack.AddItem(itemSlot)
-	json.NewEncoder(w).Encode(backpack.ItemArray)
+	json.NewEncoder(w).Encode("success")
 
 	// fmt.Println(item_name)
 	// json.NewEncoder(w).Encode(map[string]string{"message": "Search functionality not implemented yet"})
@@ -130,7 +130,7 @@ func getItemStackSize(item string) int {
 	case "WEAPON":
 		return 3
 	case "WONDROUS_ITEMS":
-		return 1
+		return 2
 	default:
 		return 0
 	}
